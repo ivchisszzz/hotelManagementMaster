@@ -4,16 +4,10 @@ import com.app.hotelMangemet.dto.FacilityDto;
 import com.app.hotelMangemet.dto.FileDto;
 import com.app.hotelMangemet.dto.HotelDto;
 import com.app.hotelMangemet.dto.RoomDto;
-import com.app.hotelMangemet.entities.Facility;
-import com.app.hotelMangemet.entities.Hotel;
-import com.app.hotelMangemet.entities.File;
-import com.app.hotelMangemet.entities.Room;
+import com.app.hotelMangemet.entities.*;
 import com.app.hotelMangemet.exceptions.HotelExceptions;
 import com.app.hotelMangemet.exceptions.RoomExceptions;
-import com.app.hotelMangemet.repositories.FacilityRepository;
-import com.app.hotelMangemet.repositories.FileRepository;
-import com.app.hotelMangemet.repositories.HotelRepository;
-import com.app.hotelMangemet.repositories.RoomRepository;
+import com.app.hotelMangemet.repositories.*;
 import com.app.hotelMangemet.services.facility.FacilityService;
 import com.app.hotelMangemet.services.room.RoomServiceImpl;
 import org.apache.commons.io.FilenameUtils;
@@ -48,6 +42,9 @@ public class HotelServiceImpl implements HotelService {
     @Autowired
     private FileRepository fileRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
     @Override
     public Long createHotel(HotelDto hotelDto) {
         List<String> validationHotelMsg = validateHotelFields(hotelDto);
@@ -65,6 +62,8 @@ public class HotelServiceImpl implements HotelService {
         hotel.setHotelName(hotelDto.getHotelName());
         hotel.setLocation(hotelDto.getLocation());
         hotel.setCity(hotelDto.getCity());
+        User user = userRepository.getById(hotelDto.getUserId());
+        hotel.setUser(user);
         hotelRepository.save(hotel);
         List<Room> roomList = new ArrayList<>();
 
@@ -274,6 +273,8 @@ public class HotelServiceImpl implements HotelService {
         boolean exists = hotel != null ? true : false;
         return exists;
     }
+
+
 
 
 

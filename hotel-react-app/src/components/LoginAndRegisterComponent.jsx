@@ -1,12 +1,12 @@
 import "../css/style.css";
 import "react-bootstrap";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlaneArrival } from "@fortawesome/free-solid-svg-icons";
 import toast from "react-hot-toast";
-import { UserContext } from "../App";
+import Session from "react-session-api";
 
 function LoginAndRegisterComponent(props) {
   const [registerUser, setRegisterUser] = useState({
@@ -20,7 +20,6 @@ function LoginAndRegisterComponent(props) {
     vatNumber: "",
   });
   const [loginUser, setLoginuser] = useState({ email: "", password: "" });
-  const { setLoggedUser } = useContext(UserContext);
 
   const [isPersonal, setIsPersonal] = useState(true);
 
@@ -42,17 +41,27 @@ function LoginAndRegisterComponent(props) {
 
   const onSubmitLogin = (e) => {
     e.preventDefault();
+    const hashedPassword = loginUser.password;
+    // const data = new FormData();
+    //data.append("username", loginUser.email);
+    //data.append("password", loginUser.password);
     axios({
       method: "POST",
       url: "http://localhost:8080/login",
       data: {
         email: loginUser.email,
-        password: loginUser.password,
+        password: hashedPassword,
       },
     })
       .then((response) => {
         if (response.status === 200) {
-          setLoggedUser(response.data);
+          Session.set(
+            "loggedUser",
+            JSON.stringify({
+              id: response.data.userId,
+              role: response.data.roleName,
+            })
+          );
           navigate("/home");
         }
       })
@@ -75,6 +84,7 @@ function LoginAndRegisterComponent(props) {
 
   const onSubmitRegister = (e) => {
     e.preventDefault();
+    const hashedPassword = registerUser.password;
     axios({
       method: "POST",
       url: "http://localhost:8080/register",
@@ -83,7 +93,7 @@ function LoginAndRegisterComponent(props) {
         lastName: registerUser.lastname,
         username: registerUser.username,
         email: registerUser.email,
-        password: registerUser.password,
+        password: hashedPassword,
         phoneNumber: registerUser.phoneNumber,
         companyName: registerUser.companyName,
         vatNumber: registerUser.vatNumber,

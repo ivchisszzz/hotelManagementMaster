@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { useState } from "react";
 import { Container } from "react-bootstrap";
 import toast from "react-hot-toast";
@@ -13,8 +13,10 @@ import styled, { keyframes } from "styled-components";
 import { Dropzone, FileItem } from "@dropzone-ui/react";
 import { zoomIn } from "react-animations";
 import { RegionDropdown } from "react-country-region-selector";
+import { UserContext } from "../App";
 
 function Home(props) {
+  const { loggedUser } = useContext(UserContext);
   const [room, setRoom] = useState({
     roomCharge: "",
     roomType: "",
@@ -28,6 +30,7 @@ function Home(props) {
     facilities: [],
     images: [],
     city: "",
+    userId: loggedUser.id,
   });
 
   const [facility, setFacility] = useState({

@@ -26,6 +26,7 @@ function ReservationForm(props) {
     email: " ",
     hotelName: " ",
     roomType: " ",
+    roomId: " ",
   });
   const [success, setSuccess] = useState();
   const [facilities, setFacilities] = useState([]);
@@ -113,6 +114,7 @@ function ReservationForm(props) {
         facilitiesList: facilities,
         checkInDate: checkIn,
         checkOutDate: checkOut,
+        roomId: hotelDetails.room.id,
       },
     })
       .then((response) => {

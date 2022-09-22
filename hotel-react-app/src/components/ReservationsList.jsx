@@ -1,15 +1,19 @@
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { Button, Container, Table } from "react-bootstrap";
 import toast from "react-hot-toast";
+import { useParams } from "react-router";
+import { UserContext } from "../App";
 
 function ReservationsList(props) {
+  const { hotelId } = useParams();
   const [reservations, setReservations] = useState([]);
   const [success, setSuccess] = useState();
-  const getAllReservations = () => {
+  const { isAdmin, loggedUser } = useContext(UserContext);
+  const getAllReservations = useCallback(() => {
     axios({
       method: "GET",
-      url: `http://localhost:8080/reservations/${1}`,
+      url: `http://localhost:8080/reservations/${loggedUser.id}`,
     })
       .then((response) => {
         if (response.status === 200) {
@@ -20,18 +24,28 @@ function ReservationsList(props) {
       .catch((error) => {
         toast.error(error.response.data.message);
       });
-  };
-  useEffect(
-    () => getAllReservations(),
+  }, [loggedUser.id]);
 
-    []
-  );
-  // const deleteReservation = (id) => {
-  //   axios({
-  //     method: "DELETE",
-  //     url: `http://localhost:8080/reservations/${id}`,
-  //   }).then(() => getAllReservations());
-  // };
+  const getAllReservationsForHotel = useCallback(() => {
+    axios({
+      method: "GET",
+      url: `http://localhost:8080/hotels/${hotelId}/reservations`,
+    })
+      .then((response) => {
+        if (response.status === 200) {
+          setSuccess(true);
+          setReservations(response.data);
+        }
+      })
+      .catch((error) => {
+        toast.error(error.response.data.message);
+      });
+  }, [hotelId]);
+
+  useEffect(() => {
+    isAdmin ? getAllReservationsForHotel() : getAllReservations();
+  }, [getAllReservations, getAllReservationsForHotel, isAdmin]);
+
   const cancelReservation = (id) => {
     axios({
       method: "PUT",
@@ -74,12 +88,14 @@ function ReservationsList(props) {
                     <td>{r.checkOutDate}</td>
                     <td>{r.status}</td>
                     <td>
-                      <Button
-                        className="btn btn-primary"
-                        onClick={() => cancelReservation(r.id)}
-                      >
-                        Cancel
-                      </Button>
+                      {(r.status === "ONGOING" || isAdmin) && (
+                        <Button
+                          className="btn btn-primary"
+                          onClick={() => cancelReservation(r.id)}
+                        >
+                          Cancel
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -87,6 +103,9 @@ function ReservationsList(props) {
           </tbody>
         </Table>
       </Container>
+      {success && reservations.length === 0 && (
+        <h2 className="text-center">No reservations found!</h2>
+      )}
     </>
   );
 }

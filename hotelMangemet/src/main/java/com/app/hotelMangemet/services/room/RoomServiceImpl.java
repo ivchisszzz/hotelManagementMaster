@@ -76,6 +76,7 @@ public class RoomServiceImpl implements RoomService {
     public List<RoomDto> getAvailableRooms(List<Room> roomList) {
         List<RoomDto> roomDtoList = roomList.stream().map(room -> {
             RoomDto dto = new RoomDto();
+            dto.setId(room.getId());
             dto.setRoomCharge(room.getRoomCharge());
             dto.setRoomType(room.getRoomType());
             dto.setRoomNumber(room.getRoomNumber());

@@ -1,18 +1,30 @@
 package com.app.hotelMangemet.services.reservation;
 
 import com.app.hotelMangemet.dto.ReservationDto;
+import com.app.hotelMangemet.dto.ReservationLineChartDto;
+import com.app.hotelMangemet.dto.ReservationStatusPieDto;
 import com.app.hotelMangemet.entities.*;
 import com.app.hotelMangemet.exceptions.ReservationException;
 import com.app.hotelMangemet.repositories.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.time.LocalDate;
+import java.time.Month;
+import java.time.format.TextStyle;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
+@Transactional
 public class ReservationServiceImpl implements ReservationService {
 
     @Autowired
@@ -51,30 +63,19 @@ public class ReservationServiceImpl implements ReservationService {
             facilities.add(newFacility);
         });
         reservation.setFacilities(facilities);
-        Room room = roomRepository.findRoomByMaxGuests(reservationDto.getMaxGuests());
+        Room room = roomRepository.getById(reservationDto.getRoomId());
         reservation.setRoom(room);
         reservation.setTotal(reservationDto.getTotal());
         reservation.setStatus(Status.ONGOING);
         reservationRepository.save(reservation);
     }
 
-    @Override
-    public void updateReservation(Long id, ReservationDto reservationDto) {
-        List<String> validationErrors = validateReservationFields(reservationDto);
-        if(!validationErrors.isEmpty()){
-            throw new ReservationException(validationErrors);
-        }
-        Reservation reservation = reservationRepository.getById(id);
-        //reservation.set
-
-    }
 
     @Override
     public List<ReservationDto> findReservationByUserId(Long userId) {
         List<Reservation> reservations = reservationRepository.findAll();
-        reservations.stream().filter(r -> r.getUser().getId().equals(userId));
         List<ReservationDto> reservationDtos = new ArrayList<>();
-        reservations.forEach(reservation -> {
+        reservations.stream().filter(r -> r.getUser().getId().equals(userId)).forEach(reservation -> {
             ReservationDto dto = new ReservationDto();
             dto.setCheckInDate(reservation.getCheckInDate());
             dto.setCheckOutDate(reservation.getCheckOutDate());
@@ -112,6 +113,53 @@ public class ReservationServiceImpl implements ReservationService {
 
     }
 
+    @Override
+    public List<ReservationStatusPieDto> getPieDataForHotel(Long hotelId) {
+        return  Stream.of(Status.ONGOING,Status.CANCELED,Status.COMPLETED)
+                .map(status -> {
+                    Long reservationCountForStatus = reservationRepository.countByHotelIdAndStatus(hotelId,status);
+                    return new ReservationStatusPieDto(status,reservationCountForStatus);
+                }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ReservationLineChartDto> getLineChartDataForHotelByMonths(Long hotelId, int year) {
+
+
+        return     Arrays.stream(  Month.values()).map(month->{
+            ReservationLineChartDto dto =  new ReservationLineChartDto();
+            dto.setMonthName(month.getDisplayName(TextStyle.SHORT, Locale.getDefault()));
+            LocalDate monthStartDate = LocalDate.of(year,month,1);
+            LocalDate monthEndDate = monthStartDate.with(TemporalAdjusters.lastDayOfMonth());
+            dto.setCompletedCount(reservationRepository.countByHotelIdAndStatusAndCreatedOnGreaterThanEqualAndCreatedOnLessThanEqual(hotelId,Status.COMPLETED,monthStartDate,monthEndDate));
+            dto.setCancelledCount(reservationRepository.countByHotelIdAndStatusAndCreatedOnGreaterThanEqualAndCreatedOnLessThanEqual(hotelId,Status.CANCELED,monthStartDate,monthEndDate));
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ReservationDto> findReservationByHotelId(Long hotelId) {
+        List<Reservation> reservations = reservationRepository.findAll();
+        List<ReservationDto> reservationDtos = new ArrayList<>();
+        reservations.stream().filter(r -> r.getHotel().getId().equals(hotelId)).forEach(reservation -> {
+            ReservationDto dto = new ReservationDto();
+            dto.setCheckInDate(reservation.getCheckInDate());
+            dto.setCheckOutDate(reservation.getCheckOutDate());
+            dto.setHotelName(reservation.getHotel().getHotelName());
+            dto.setFirstName(reservation.getUser().getFirstName());
+            dto.setLastName(reservation.getUser().getLastName());
+            dto.setPhone(reservation.getPhone());
+            dto.setRoomType(reservation.getRoom().getRoomType().toString());
+            dto.setMaxGuests(reservation.getRoom().getMaxGuests());
+            dto.setTotal(reservation.getTotal());
+            dto.setId(reservation.getId());
+            dto.setStatus(reservation.getStatus().toString());
+            reservationDtos.add(dto);
+        });
+
+        return reservationDtos;
+    }
+
     private List<String> validateReservationFields(ReservationDto reservationDto){
         List<String> validationErrors = new ArrayList<>();
         if(StringUtils.isBlank(reservationDto.getHotelName())){
@@ -137,10 +185,12 @@ public class ReservationServiceImpl implements ReservationService {
 
     private boolean checkIfUserExists(String email){
         User user = userRepository.findUserByEmail(email);
-        if(user != null){
-            return true;
-        }else{
-            return false;
-        }
+        return user != null;
+    }
+
+    public void updateReservationStatus(Long reservationId, Status status){
+        Reservation reservation = reservationRepository.getById(reservationId);
+        reservation.setStatus(status);
+        reservationRepository.save(reservation);
     }
 }

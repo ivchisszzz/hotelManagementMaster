@@ -23,7 +23,7 @@ const getHotel = (id) => {
 function UpdateHotel(props) {
   const { hotelDetails } = useContext(HotelContext);
   const [hotel, setHotel] = useState({});
-  const [success, setSuccess] = useState();
+  const [setSuccess] = useState();
   const [facilityIdToUpdate, setFacilityIdToUpdate] = useState(null);
   const [roomIdtoUpdate, setRoomIdToUpdate] = useState(null);
   const [show, setShow] = useState(false);
@@ -71,7 +71,7 @@ function UpdateHotel(props) {
         .catch((error) => {
           toast.error(error.response.data.message);
         }),
-    [hotelDetails.hotelId]
+    [hotelDetails.hotelId, setSuccess]
   );
   const facilityToUpdate = hotel?.facilities?.find(
     (element) => element.id === facilityIdToUpdate

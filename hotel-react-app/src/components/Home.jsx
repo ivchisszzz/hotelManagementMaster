@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Col, Container, Row } from "react-bootstrap";
+import { Col, Container, Row, Spinner } from "react-bootstrap";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -136,10 +136,12 @@ function Home(props) {
         </Row>
       </Container>
 
-      {/* <Container> */}
       <div className="hotels">
+        {success && hotels.length === 0 && (
+          <h2 className="text-center">No hotels found for the criteria!</h2>
+        )}
         <Row className="mt-5">
-          {success &&
+          {success ? (
             hotels.map((h) => {
               return (
                 <Col sm={2} className="img-thumbnail mr-2 mb-2" key={h.id}>
@@ -162,10 +164,12 @@ function Home(props) {
                   </button>
                 </Col>
               );
-            })}
+            })
+          ) : (
+            <Spinner animation="border" />
+          )}
         </Row>
       </div>
-      {/* </Container> */}
     </div>
   );
 }

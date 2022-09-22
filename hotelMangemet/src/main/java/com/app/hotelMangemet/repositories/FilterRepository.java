@@ -64,30 +64,6 @@ public class FilterRepository {
         Join<Room, Hotel> hotel = roomRoot.join("hotel");
         List<Predicate> restrictions = new ArrayList<Predicate>();
         if (checkIn != null && checkOut != null) {
-//            restrictions.add(cb.or(
-//                    cb.and(
-//                            cb.isNull(reservationRoom.get("checkInDate")),
-//                            cb.isNull(reservationRoom.get("checkOutDate")))
-//                    ,
-//                    cb.not(
-//                            cb.or(
-//                                    cb.and(cb.lessThan(reservationRoom.get("checkInDate"), checkIn),cb.lessThan(reservationRoom.get("checkOutDate"), checkIn)),
-//                                    cb.and(cb.greaterThan(reservationRoom.get("checkInDate"), checkOut),cb.greaterThan(reservationRoom.get("checkOutDate"), checkOut))
-//                    ))));
-//            restrictions.add(cb.or(
-//                    cb.and(
-//                            cb.isNull(reservationRoom.get("checkInDate")),
-//                            cb.isNull(reservationRoom.get("checkOutDate")))
-//                    ,
-//                    cb.not(
-//                            cb.and(
-//                                    cb.greaterThanOrEqualTo(reservationRoom.get("checkInDate"), checkIn), cb.greaterThan(reservationRoom.get("checkOutDate"), checkIn),
-//                                    cb.lessThan(reservationRoom.get("checkInDate"), checkOut), cb.lessThanOrEqualTo(reservationRoom.get("checkOutDate"), checkOut)
-//                            )
-//
-//                    )));
-
-
             restrictions.add(cb.or(
                     cb.and(
                             cb.isNull(reservationRoom.get("checkInDate")),

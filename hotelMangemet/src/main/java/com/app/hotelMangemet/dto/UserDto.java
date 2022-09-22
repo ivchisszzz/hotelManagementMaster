@@ -13,6 +13,7 @@ public class UserDto {
     private Boolean isPersonal;
     private String companyName;
     private String vatNumber;
+    private String salt;
 
     public UserDto(String firstName, String lastName, String username, String email, String password, String phoneNumber) {
         this.firstName = firstName;

@@ -18,6 +18,7 @@ public class HotelDto {
     private String extension;
     private String city;
     private List<FileDto> files;
+    private Long userId;
 
 
 }

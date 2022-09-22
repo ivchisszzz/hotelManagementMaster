@@ -15,8 +15,6 @@ public class Hotel {
     private String hotelName;
     private String location;
     private String city;
-    @ManyToOne
-    private Rating rating;
     @OneToMany(mappedBy = "hotel", cascade ={CascadeType.REMOVE,CascadeType.PERSIST} )
     private List<Room> rooms;
     @OneToMany(mappedBy = "hotel", cascade = {CascadeType.REMOVE,CascadeType.PERSIST})

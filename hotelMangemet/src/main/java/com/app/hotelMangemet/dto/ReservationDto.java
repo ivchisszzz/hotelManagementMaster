@@ -20,6 +20,7 @@ public class ReservationDto {
     private LocalDate checkOutDate;
     private Long id;
     private String status;
+    private Long roomId;
 
 
 

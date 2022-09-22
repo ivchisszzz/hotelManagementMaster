@@ -21,6 +21,7 @@ public class User {
     private Role role;
     private String companyName;
     private String vatNumber;
+    private String salt;
 
 
     public User(String firstName, String lastName, String username, String email, String password, String phoneNumber) {

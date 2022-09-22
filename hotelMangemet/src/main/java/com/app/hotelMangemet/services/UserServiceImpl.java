@@ -6,17 +6,27 @@ import com.app.hotelMangemet.entities.User;
 import com.app.hotelMangemet.exceptions.UserExceptions;
 import com.app.hotelMangemet.repositories.RoleRepository;
 import com.app.hotelMangemet.repositories.UserRepository;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.KeySpec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
+@Transactional
 public class UserServiceImpl implements UserService {
 
     private static final Pattern VALID_EMAIL_ADDRESS_REGEX = Pattern.compile("^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,6}$", Pattern.CASE_INSENSITIVE);
@@ -41,7 +51,9 @@ public class UserServiceImpl implements UserService {
         LoginUserDto loginUserDto = new LoginUserDto();
         loginUserDto.setUserId(user.getId());
         loginUserDto.setRoleName(user.getRole().getRoleName());
-        if(!user.getPassword().equals(password)){
+        byte[] decodedSalt = decodeHex(user.getSalt());
+
+        if(!user.getPassword().equals(hashPassword(password,decodedSalt))){
             throw new IllegalArgumentException("Wrong password");
         }
         return loginUserDto;
@@ -62,10 +74,10 @@ public class UserServiceImpl implements UserService {
                 validationMsg.add("Last name is required");
             }
         }else{
-            if(StringUtils.isBlank(userDto.getFirstName())){
+            if(StringUtils.isBlank(userDto.getCompanyName())){
                 validationMsg.add("Company name is required");
             }
-            if(StringUtils.isBlank(userDto.getLastName())){
+            if(StringUtils.isBlank(userDto.getVatNumber())){
                 validationMsg.add("Vat number is required");
             }
         }
@@ -86,8 +98,12 @@ public class UserServiceImpl implements UserService {
 
         newUser.setEmail(userDto.getEmail());
         newUser.setUsername(userDto.getUsername());
-        newUser.setPassword(userDto.getPassword());
+        SecureRandom random = new SecureRandom();
+        byte[] salt = new byte[16];
+        random.nextBytes(salt);
+        newUser.setPassword(hashPassword(userDto.getPassword(), salt));
         newUser.setPhoneNumber(userDto.getPhoneNumber());
+        newUser.setSalt(encodeHex(salt));
 
         userRepository.save(newUser);
         return true;
@@ -141,5 +157,37 @@ public class UserServiceImpl implements UserService {
             errorMsg.add("Email is not in the right format");
         }
         return errorMsg;
+    }
+
+    private String hashPassword(String password, byte[] salt){
+        String encodedPassword = null;
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt, 65536, 128);
+        SecretKeyFactory factory = null;
+        try {
+            factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        try {
+            byte[] hash = factory.generateSecret(spec).getEncoded();
+             encodedPassword = encodeHex(hash);
+        } catch (InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+
+        return encodedPassword;
+    }
+
+    String encodeHex(final byte[] bytesToEncode) {
+        return Hex.encodeHexString(bytesToEncode);
+    }
+
+    byte[] decodeHex(final String encodedBytes) {
+        try {
+            return Hex.decodeHex(encodedBytes);
+        } catch (DecoderException e) {
+            e.printStackTrace();
+        }
+        throw new IllegalArgumentException("Error while decoding");
     }
 }

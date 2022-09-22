@@ -1,10 +1,14 @@
 package com.app.hotelMangemet.api;
 
 import com.app.hotelMangemet.dto.HotelDto;
+import com.app.hotelMangemet.dto.ReservationDto;
+import com.app.hotelMangemet.dto.ReservationLineChartDto;
+import com.app.hotelMangemet.dto.ReservationStatusPieDto;
 import com.app.hotelMangemet.dto.RoomDto;
 import com.app.hotelMangemet.entities.Hotel;
 import com.app.hotelMangemet.repositories.FilterRepository;
 import com.app.hotelMangemet.services.hotel.HotelService;
+import com.app.hotelMangemet.services.reservation.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
@@ -27,6 +31,9 @@ public class HotelController {
 
     @Autowired
     FilterRepository filterRepository;
+
+    @Autowired
+    ReservationService reservationService;
 
     @PostMapping
     public ResponseEntity<Long> createHotel(@RequestBody HotelDto hotelDto){
@@ -76,6 +83,16 @@ public class HotelController {
         return ResponseEntity.ok(hotelDto);
     }
 
+    @GetMapping("/{hotelId}/status-statistics")
+    public ResponseEntity<List<ReservationStatusPieDto>> getHotelReservationsStatistics(@PathVariable Long hotelId){
+        return ResponseEntity.ok(reservationService.getPieDataForHotel(hotelId));
+    }
+
+    @GetMapping("/{hotelId}/monthly-statistics")
+    public ResponseEntity<List<ReservationLineChartDto>> getHotelReservationsMonthlyStatistics(@PathVariable Long hotelId, @RequestParam int year){
+        return ResponseEntity.ok(reservationService.getLineChartDataForHotelByMonths(hotelId,year));
+    }
+
   @GetMapping("/user/{userId}")
     public ResponseEntity<List<HotelDto>> getHotelsByUserId(@PathVariable Long userId){
         List<HotelDto> hotelList = hotelService.getAllHotelsByUserId(userId);
@@ -84,7 +101,11 @@ public class HotelController {
   }
 
 
-
+    @GetMapping("/{hotelId}/reservations")
+    public ResponseEntity<List<ReservationDto>> getReservationByHotelId(@PathVariable Long hotelId){
+        List<ReservationDto> reservationDtos = reservationService.findReservationByHotelId(hotelId);
+        return ResponseEntity.ok(reservationDtos);
+    }
 
 
 

@@ -13,6 +13,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -61,7 +65,7 @@ public class UserServiceTest {
         assertThat(exception.getMessage()).isEqualTo("User with this email already exists");
     }
     @Test
-    void testRegisterUserWithValidData(){
+    void testRegisterUserWithValidData() throws NoSuchAlgorithmException, InvalidKeySpecException {
         Mockito.doReturn(new User()).when(userRepository).save(Mockito.any(User.class));
         Mockito.when(userRepository.findUserByEmail(Mockito.anyString())).thenReturn(null);
         Boolean isRegistered = userService.registerUser(new UserDto("Iva", "Dimitrova", "ivaaa","iva@abv.bg", "123456", "0987666"));
